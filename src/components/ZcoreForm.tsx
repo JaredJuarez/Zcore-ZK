@@ -1,13 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { Button, Text, Input, Checkbox, Select } from '@stellar/design-system';
+import { Button, Text, Input } from '@stellar/design-system';
 import { useWallet } from '../hooks/useWallet';
 import { useWalletBalance } from '../hooks/useWalletBalance';
 import { NoirService } from '../services/NoirService';
-import { StellarContractService, ZCORE_SCORING_CONTRACT_ID } from '../services/StellarContractService';
-import { Contract } from '@stellar/stellar-sdk/contract';
-import { Address } from '@stellar/stellar-sdk';
-import { Networks } from '@stellar/stellar-sdk';
-import { Buffer } from 'buffer';
+import { StellarContractService, zcoreScoringClient } from '../services/StellarContractService';
 import { keccak_256 } from '@noble/hashes/sha3.js';
 
 interface FormDataInput {
@@ -85,7 +81,7 @@ const EMPTY_FORM: FormDataInput = {
 function strToField(str: string): string {
   const hash = keccak_256(new TextEncoder().encode(str));
   // Convert to big-endian hex string (64 chars)
-  return '0x' + Array.from(hash).map(b => b.toString(16).padStart(2, '0')).join('');
+  return '0x' + Array.from(hash).map((b) => (b as number).toString(16).padStart(2, '0')).join('');
 }
 
 export const ZcoreForm: React.FC = () => {
@@ -100,7 +96,7 @@ export const ZcoreForm: React.FC = () => {
     field: K,
     value: FormDataInput[K]
   ) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev: FormDataInput) => ({ ...prev, [field]: value }));
   };
 
   const generateProof = async () => {
@@ -178,26 +174,15 @@ STELLAR VERIFICATION
 
       // Verify on Stellar
       try {
-        // Load VK JSON as string (the contract expects the JSON array format)
-        const vkResponse = await fetch('/circuits/vk_fields.json');
-        const vkJsonArray = await vkResponse.json();
-        const vkJsonString = JSON.stringify(vkJsonArray);
-        const vkBuffer = Buffer.from(vkJsonString, 'utf-8');
         const proofBuffer = StellarContractService.toBuffer(proofResult.proofBlob);
 
-        // Create contract instance using Soroban SDK
-        const contract = new Contract({
-          contractId: ZCORE_SCORING_CONTRACT_ID,
-          networkPassphrase: Networks.STANDALONE,
-          rpcUrl: 'http://localhost:8000/soroban/rpc',
-        });
+        // Use the zcore scoring contract client
+        zcoreScoringClient.options.publicKey = address;
 
-        contract.options.publicKey = address;
-
-        // Call verify_score_proof
+        // Call verify_score_proof using the contract's method
         // The contract expects: user (Address), proof_blob (Bytes)
-        const tx = await contract.call('verify_score_proof', {
-          user: Address.fromString(address),
+        const tx = await zcoreScoringClient.verify_score_proof({
+          user: address,
           proof_blob: proofBuffer,
         });
 
@@ -245,7 +230,7 @@ ${error.stack || ''}`);
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem' }}>
       <Text as="h2" size="lg" style={{ marginBottom: '1rem' }}>
         Zcore Credit Scoring Form
       </Text>
@@ -261,40 +246,55 @@ ${error.stack || ''}`);
           </Text>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <Input
+              id="nombre-completo"
               label="Full Name"
+              fieldSize="md"
               value={formData.nombre_completo}
-              onChange={(e) => updateField('nombre_completo', e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('nombre_completo', e.target.value)}
               placeholder="John Doe"
             />
             <Input
+              id="dni"
               label="DNI/ID"
+              fieldSize="md"
               value={formData.dni}
-              onChange={(e) => updateField('dni', e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('dni', e.target.value)}
               placeholder="12345678"
             />
             <Input
+              id="email"
               label="Email"
+              fieldSize="md"
               type="email"
               value={formData.email}
-              onChange={(e) => updateField('email', e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('email', e.target.value)}
               placeholder="john@example.com"
             />
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <Checkbox
-                label="Email Verified"
-                checked={formData.email_verificado}
-                onChange={(checked) => updateField('email_verificado', checked)}
-              />
-              <Checkbox
-                label="Phone Verified"
-                checked={formData.telefono_verificado}
-                onChange={(checked) => updateField('telefono_verificado', checked)}
-              />
-              <Checkbox
-                label="DNI Verified"
-                checked={formData.dni_verificado}
-                onChange={(checked) => updateField('dni_verificado', checked)}
-              />
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.email_verificado}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('email_verificado', e.target.checked)}
+                />
+                <Text as="span" size="sm">Email Verified</Text>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.telefono_verificado}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('telefono_verificado', e.target.checked)}
+                />
+                <Text as="span" size="sm">Phone Verified</Text>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.dni_verificado}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('dni_verificado', e.target.checked)}
+                />
+                <Text as="span" size="sm">DNI Verified</Text>
+              </label>
             </div>
           </div>
         </div>
@@ -305,36 +305,48 @@ ${error.stack || ''}`);
             Employment Information
           </Text>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <Checkbox
-              label="Has Employment"
-              checked={formData.tiene_empleo}
-              onChange={(checked) => updateField('tiene_empleo', checked)}
-            />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={formData.tiene_empleo}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('tiene_empleo', e.target.checked)}
+              />
+              <Text as="span" size="sm">Has Employment</Text>
+            </label>
             {formData.tiene_empleo && (
               <>
-                <Select
-                  label="Employment Type"
-                  value={formData.tipo_empleo.toString()}
-                  onChange={(e) => updateField('tipo_empleo', parseInt(e.target.value))}
-                >
-                  <option value="0">None</option>
-                  <option value="1">Part-time</option>
-                  <option value="2">Self-employed (&lt;2 years)</option>
-                  <option value="3">Self-employed (&gt;2 years)</option>
-                  <option value="4">Full-time (private)</option>
-                  <option value="5">Full-time (public)</option>
-                </Select>
+                <div>
+                  <Text as="span" size="sm" style={{ display: 'block', marginBottom: '0.5rem' }}>
+                    Employment Type
+                  </Text>
+                  <select
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+                    value={formData.tipo_empleo.toString()}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateField('tipo_empleo', parseInt(e.target.value))}
+                  >
+                    <option value="0">None</option>
+                    <option value="1">Part-time</option>
+                    <option value="2">Self-employed (&lt;2 years)</option>
+                    <option value="3">Self-employed (&gt;2 years)</option>
+                    <option value="4">Full-time (private)</option>
+                    <option value="5">Full-time (public)</option>
+                  </select>
+                </div>
                 <Input
+                  id="ingresos-mensuales"
                   label="Monthly Income (USD)"
+                  fieldSize="md"
                   type="number"
-                  value={formData.ingresos_mensuales_usd}
-                  onChange={(e) => updateField('ingresos_mensuales_usd', parseInt(e.target.value) || 0)}
+                  value={formData.ingresos_mensuales_usd.toString()}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('ingresos_mensuales_usd', parseInt(e.target.value) || 0)}
                 />
                 <Input
+                  id="antiguedad-trabajo"
                   label="Job Tenure (months)"
+                  fieldSize="md"
                   type="number"
-                  value={formData.antiguedad_trabajo_meses}
-                  onChange={(e) => updateField('antiguedad_trabajo_meses', parseInt(e.target.value) || 0)}
+                  value={formData.antiguedad_trabajo_meses.toString()}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('antiguedad_trabajo_meses', parseInt(e.target.value) || 0)}
                 />
               </>
             )}
@@ -347,72 +359,102 @@ ${error.stack || ''}`);
             Financial Information
           </Text>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <Checkbox
-              label="Has Bank Account"
-              checked={formData.tiene_cuenta_bancaria}
-              onChange={(checked) => updateField('tiene_cuenta_bancaria', checked)}
-            />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={formData.tiene_cuenta_bancaria}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('tiene_cuenta_bancaria', e.target.checked)}
+              />
+              <Text as="span" size="sm">Has Bank Account</Text>
+            </label>
             {formData.tiene_cuenta_bancaria && (
               <Input
+                id="antiguedad-cuenta-bancaria"
                 label="Bank Account Age (months)"
+                fieldSize="md"
                 type="number"
-                value={formData.antiguedad_cuenta_bancaria_meses}
-                onChange={(e) => updateField('antiguedad_cuenta_bancaria_meses', parseInt(e.target.value) || 0)}
+                value={formData.antiguedad_cuenta_bancaria_meses.toString()}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('antiguedad_cuenta_bancaria_meses', parseInt(e.target.value) || 0)}
               />
             )}
-            <Checkbox
-              label="Has Credit Card"
-              checked={formData.tiene_tarjeta_credito}
-              onChange={(checked) => updateField('tiene_tarjeta_credito', checked)}
-            />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={formData.tiene_tarjeta_credito}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('tiene_tarjeta_credito', e.target.checked)}
+              />
+              <Text as="span" size="sm">Has Credit Card</Text>
+            </label>
             {formData.tiene_tarjeta_credito && (
-              <Checkbox
-                label="Uses Credit Card Responsibly"
-                checked={formData.usa_tarjeta_responsablemente}
-                onChange={(checked) => updateField('usa_tarjeta_responsablemente', checked)}
-              />
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.usa_tarjeta_responsablemente}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('usa_tarjeta_responsablemente', e.target.checked)}
+                />
+                <Text as="span" size="sm">Uses Credit Card Responsibly</Text>
+              </label>
             )}
-            <Checkbox
-              label="Has Savings Account"
-              checked={formData.tiene_cuenta_ahorro}
-              onChange={(checked) => updateField('tiene_cuenta_ahorro', checked)}
-            />
-            <Checkbox
-              label="Had Loans"
-              checked={formData.tuvo_prestamos}
-              onChange={(checked) => updateField('tuvo_prestamos', checked)}
-            />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={formData.tiene_cuenta_ahorro}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('tiene_cuenta_ahorro', e.target.checked)}
+              />
+              <Text as="span" size="sm">Has Savings Account</Text>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={formData.tuvo_prestamos}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('tuvo_prestamos', e.target.checked)}
+              />
+              <Text as="span" size="sm">Had Loans</Text>
+            </label>
             {formData.tuvo_prestamos && (
               <>
                 <Input
+                  id="cantidad-prestamos"
                   label="Paid Loans Count"
+                  fieldSize="md"
                   type="number"
-                  value={formData.cantidad_prestamos_pagados}
-                  onChange={(e) => updateField('cantidad_prestamos_pagados', parseInt(e.target.value) || 0)}
+                  value={formData.cantidad_prestamos_pagados.toString()}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('cantidad_prestamos_pagados', parseInt(e.target.value) || 0)}
                 />
-                <Checkbox
-                  label="Loans Paid on Time"
-                  checked={formData.prestamos_a_tiempo}
-                  onChange={(checked) => updateField('prestamos_a_tiempo', checked)}
-                />
-                <Checkbox
-                  label="Current Credit Up to Date"
-                  checked={formData.credito_actual_al_dia}
-                  onChange={(checked) => updateField('credito_actual_al_dia', checked)}
-                />
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.prestamos_a_tiempo}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('prestamos_a_tiempo', e.target.checked)}
+                  />
+                  <Text as="span" size="sm">Loans Paid on Time</Text>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.credito_actual_al_dia}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('credito_actual_al_dia', e.target.checked)}
+                  />
+                  <Text as="span" size="sm">Current Credit Up to Date</Text>
+                </label>
               </>
             )}
-            <Checkbox
-              label="Has Debts"
-              checked={formData.tiene_deudas}
-              onChange={(checked) => updateField('tiene_deudas', checked)}
-            />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={formData.tiene_deudas}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('tiene_deudas', e.target.checked)}
+              />
+              <Text as="span" size="sm">Has Debts</Text>
+            </label>
             {formData.tiene_deudas && (
               <Input
+                id="ratio-deuda-ingreso"
                 label="Debt-to-Income Ratio (×100, e.g., 30 for 0.3)"
+                fieldSize="md"
                 type="number"
-                value={formData.ratio_deuda_ingreso}
-                onChange={(e) => updateField('ratio_deuda_ingreso', parseInt(e.target.value) || 0)}
+                value={formData.ratio_deuda_ingreso.toString()}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('ratio_deuda_ingreso', parseInt(e.target.value) || 0)}
               />
             )}
           </div>
@@ -424,33 +466,44 @@ ${error.stack || ''}`);
             Additional Information
           </Text>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <Select
-              label="Country Tier"
-              value={formData.pais_tier.toString()}
-              onChange={(e) => updateField('pais_tier', parseInt(e.target.value))}
-            >
-              <option value="1">Tier 1 (Best)</option>
-              <option value="2">Tier 2</option>
-              <option value="3">Tier 3</option>
-              <option value="4">Tier 4 (Worst)</option>
-            </Select>
+            <div>
+              <Text as="span" size="sm" style={{ display: 'block', marginBottom: '0.5rem' }}>
+                Country Tier
+              </Text>
+              <select
+                style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+                value={formData.pais_tier.toString()}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateField('pais_tier', parseInt(e.target.value))}
+              >
+                <option value="1">Tier 1 (Best)</option>
+                <option value="2">Tier 2</option>
+                <option value="3">Tier 3</option>
+                <option value="4">Tier 4 (Worst)</option>
+              </select>
+            </div>
             <Input
+              id="campos-vacios"
               label="Empty Fields Count"
+              fieldSize="md"
               type="number"
-              value={formData.campos_vacios}
-              onChange={(e) => updateField('campos_vacios', parseInt(e.target.value) || 0)}
+              value={formData.campos_vacios.toString()}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('campos_vacios', parseInt(e.target.value) || 0)}
             />
             <Input
+              id="horizon-score"
               label="Horizon Score"
+              fieldSize="md"
               type="number"
-              value={formData.horizon_score}
-              onChange={(e) => updateField('horizon_score', parseInt(e.target.value) || 0)}
+              value={formData.horizon_score.toString()}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('horizon_score', parseInt(e.target.value) || 0)}
             />
             <Input
+              id="requirement"
               label="Minimum Requirement"
+              fieldSize="md"
               type="number"
-              value={formData.requirement}
-              onChange={(e) => updateField('requirement', parseInt(e.target.value) || 300)}
+              value={formData.requirement.toString()}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('requirement', parseInt(e.target.value) || 300)}
             />
           </div>
         </div>
@@ -460,6 +513,8 @@ ${error.stack || ''}`);
           onClick={generateProof}
           disabled={isGenerating || !address}
           isLoading={isGenerating}
+          variant="primary"
+          size="md"
         >
           {isGenerating ? 'Generating Proof...' : 'Generate ZK Proof'}
         </Button>
@@ -483,4 +538,3 @@ ${error.stack || ''}`);
     </div>
   );
 };
-

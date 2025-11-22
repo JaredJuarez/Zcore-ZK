@@ -7,19 +7,7 @@
 
 import { Buffer } from 'buffer';
 import game from '../contracts/guess_the_puzzle';
-
-// Import zcore_scoring contract when available
-// For now, we'll use the contract ID directly
-// TODO: Generate bindings with: soroban contract bindings ts --id CBGM4OE76JRIFNCTCA4FAR5M7P6C3GIGVRO4PWUXSRUFUXP2FLWMRQKE
-let zcoreScoringContract: any = null;
-
-try {
-  // Try to import the contract if bindings exist
-  zcoreScoringContract = require('../contracts/zcore_scoring');
-} catch (e) {
-  // Contract bindings not generated yet, will use contract ID directly
-  console.warn('zcore_scoring contract bindings not found, using contract ID directly');
-}
+import zcoreScoringContract from '../contracts/zcore_scoring';
 
 /**
  * Transaction data extracted from a transaction result
@@ -132,17 +120,5 @@ export class StellarContractService {
  * Export contract clients for direct use by components
  */
 export { game as contractClient };
-
-/**
- * Zcore Scoring Contract ID (deployed on local network)
- */
-export const ZCORE_SCORING_CONTRACT_ID = 'CBGM4OE76JRIFNCTCA4FAR5M7P6C3GIGVRO4PWUXSRUFUXP2FLWMRQKE';
-
-/**
- * Get zcore scoring contract client
- * Returns the contract client if bindings exist, otherwise returns null
- */
-export function getZcoreScoringContract() {
-  return zcoreScoringContract;
-}
+export { zcoreScoringContract as zcoreScoringClient };
 

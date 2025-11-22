@@ -8,9 +8,6 @@ run-locally = true
 
 [development.contracts]
 
-[development.contracts.ultrahonk_soroban_contract]
-client = true
-
 [development.contracts.guess_the_puzzle]
 client = true
 constructor_args = """
