@@ -77,11 +77,26 @@ const EMPTY_FORM: FormDataInput = {
 
 /**
  * Hash a string to a Field element (32 bytes, big-endian)
+ * Reduces the hash modulo BN254 field modulus to ensure it fits in the field
  */
 function strToField(str: string): string {
   const hash = keccak_256(new TextEncoder().encode(str));
   // Convert to big-endian hex string (64 chars)
-  return '0x' + Array.from(hash).map((b) => (b as number).toString(16).padStart(2, '0')).join('');
+  const hashHex = '0x' + Array.from(hash).map((b) => (b as number).toString(16).padStart(2, '0')).join('');
+  
+  // BN254 field modulus
+  const FIELD_MODULUS = BigInt('21888242871839275222246405745257275088548364400416034343698204186575808495617');
+  
+  // Convert hash to BigInt and reduce modulo field
+  const hashBigInt = BigInt(hashHex);
+  const reduced = hashBigInt % FIELD_MODULUS;
+  
+  // Convert back to hex string (remove 0x prefix for padding, then add it back)
+  const reducedHex = reduced.toString(16);
+  // Pad to 64 characters (32 bytes) to ensure proper field element representation
+  const paddedHex = reducedHex.padStart(64, '0');
+  
+  return '0x' + paddedHex;
 }
 
 export const ZcoreForm: React.FC = () => {
@@ -173,9 +188,9 @@ STELLAR VERIFICATION
 `.trim();
 
       // Verify on Stellar
+      const proofBuffer = StellarContractService.toBuffer(proofResult.proofBlob);
+      
       try {
-        const proofBuffer = StellarContractService.toBuffer(proofResult.proofBlob);
-
         // Use the zcore scoring contract client
         zcoreScoringClient.options.publicKey = address;
 
@@ -206,7 +221,84 @@ Your score proof has been verified on-chain!`;
           updateBalance();
         }, 2000);
 
-        outputText += `\n\n✗ Contract Verification Failed
+        // Check if error is VkNotSet (error code 6)
+        const isVkNotSet = contractError.message?.includes('VkNotSet') || 
+                          contractError.message?.includes('Error(Contract, #6)') ||
+                          contractError.message?.includes('error code: 6');
+
+        if (isVkNotSet) {
+          // Try to set the VK automatically, but first check if user is admin
+          try {
+            outputText += `\n\n⚠️ VK not set in contract. Checking if you are the admin...\n`;
+            
+            // Check if current user is the admin
+            // admin() is a read-only method, so we use .result directly without signing
+            const adminTx = await zcoreScoringClient.admin();
+            const adminAddress = adminTx.result || null;
+            
+            if (!adminAddress || adminAddress !== address) {
+              outputText += `\n\n✗ You are not the contract admin.
+
+Current Admin: ${adminAddress || 'Unknown'}
+Your Address: ${address}
+
+Please contact the admin (${adminAddress || 'Unknown'}) to set the VK, or use the admin account to set it manually.`;
+            } else {
+              // User is admin, proceed to set VK
+              outputText += `✓ You are the admin. Setting VK...\n`;
+              
+              // Load vk_fields.json as JSON string
+              const vkResponse = await fetch('/circuits/vk_fields.json');
+              if (!vkResponse.ok) {
+                throw new Error('Failed to load VK file');
+              }
+              const vkJsonArray = await vkResponse.json();
+              
+              // Convert JSON array to JSON string, then to bytes
+              const vkJsonString = JSON.stringify(vkJsonArray);
+              const vkJsonBytes = Buffer.from(vkJsonString, 'utf-8');
+              
+              // Set VK in contract (requires admin auth - we verified user is admin)
+              const setVkTx = await zcoreScoringClient.set_vk({
+                vk_json: vkJsonBytes,
+              });
+              
+              await setVkTx.signAndSend({ signTransaction: walletSignTransaction });
+              
+              outputText += `✓ VK set successfully! Now retrying verification...\n`;
+              
+              // Retry verification
+              const retryTx = await zcoreScoringClient.verify_score_proof({
+                user: address,
+                proof_blob: proofBuffer,
+              });
+              
+              const retryResult = await retryTx.signAndSend({ signTransaction: walletSignTransaction });
+              const retryTxData = StellarContractService.extractTransactionData(retryResult);
+              
+              outputText += `\n\n✓ Contract Verification Successful!
+
+Transaction Hash: ${retryTxData.txHash}
+Fee: ${retryTxData.fee ? StellarContractService.formatStroopsToXlm(retryTxData.fee) : 'N/A'} XLM
+
+Your score proof has been verified on-chain!`;
+            }
+          } catch (vkError: any) {
+            // Check if error is about needing admin signature
+            if (vkError.message?.includes('requires signatures from') || vkError.message?.includes('needsNonInvokerSigningBy')) {
+              outputText += `\n\n✗ Failed to set VK: Admin signature required.
+
+The VK can only be set by the contract admin. Please:
+1. Connect with the admin account, or
+2. Contact the admin to set the VK manually using the set_vk method.`;
+            } else {
+              outputText += `\n\n✗ Failed to set VK: ${vkError.message}
+
+Please ensure you are the contract admin and try setting the VK manually.`;
+            }
+          }
+        } else {
+          outputText += `\n\n✗ Contract Verification Failed
 
 Error: ${contractError.message}
 
@@ -215,6 +307,7 @@ This could mean:
 - The score is below the minimum requirement
 - The VK is not configured in the contract
 - There was a network issue`;
+        }
       }
 
       setOutput(outputText);

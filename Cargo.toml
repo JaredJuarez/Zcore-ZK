@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "contracts/guess-the-puzzle",
     "contracts/ultrahonk-soroban-contract",
     "contracts/zcore-scoring",
 ]
@@ -29,3 +28,7 @@ strip = true
 [profile.release-with-logs]
 debug-assertions = true
 inherits = "release"
+
+[workspace.metadata.stellar.contracts]
+ultrahonk_soroban_contract = { path = "contracts/ultrahonk-soroban-contract" }
+zcore_scoring = { path = "contracts/zcore-scoring" }
