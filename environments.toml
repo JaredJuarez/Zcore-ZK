@@ -16,3 +16,10 @@ client = true
 constructor_args = """
 --admin default
 """
+
+[development.contracts.zcore_scoring]
+client = true
+constructor_args = """
+--admin default
+--min_requirement 300
+"""

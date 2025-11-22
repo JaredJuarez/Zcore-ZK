@@ -1,5 +1,9 @@
 [workspace]
-members = ["contracts/*"]
+members = [
+    "contracts/guess-the-puzzle",
+    "contracts/ultrahonk-soroban-contract",
+    "contracts/zcore-scoring",
+]
 resolver = "2"
 
 [workspace.package]

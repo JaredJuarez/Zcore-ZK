@@ -1,7 +1,7 @@
-requirement = 500
+requirement = 400
 
 [form]
-horizon_score = 1
+horizon_score = 1000
 
 [form.form_data]
 # Datos sensibles hasheados (en producción usa un hash real)

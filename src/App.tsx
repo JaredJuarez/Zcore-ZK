@@ -3,6 +3,7 @@ import ConnectAccount from "./components/ConnectAccount.tsx";
 import { Routes, Route, Outlet, NavLink } from "react-router-dom";
 import Home from "./pages/Home";
 import Debugger from "./pages/Debugger.tsx";
+import Zcore from "./pages/Zcore";
 
 const AppLayout: React.FC = () => (
   <main>
@@ -11,7 +12,23 @@ const AppLayout: React.FC = () => (
       projectTitle="Noir App"
       contentRight={
         <>
-          <nav>
+          <nav style={{ display: "flex", gap: "0.5rem" }}>
+            <NavLink
+              to="/zcore"
+              style={{
+                textDecoration: "none",
+              }}
+            >
+              {({ isActive }) => (
+                <Button
+                  variant="tertiary"
+                  size="md"
+                  disabled={isActive}
+                >
+                  Zcore
+                </Button>
+              )}
+            </NavLink>
             <NavLink
               to="/debug"
               style={{
@@ -56,6 +73,7 @@ function App() {
     <Routes>
       <Route element={<AppLayout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/zcore" element={<Zcore />} />
         <Route path="/debug" element={<Debugger />} />
         <Route path="/debug/:contractName" element={<Debugger />} />
       </Route>

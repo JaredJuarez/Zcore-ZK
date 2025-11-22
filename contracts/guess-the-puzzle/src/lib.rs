@@ -17,7 +17,7 @@ pub struct GuessThePuzzle;
 pub const THE_PUZZLE: &Symbol = &symbol_short!("n");
 pub const ADMIN_KEY: &Symbol = &symbol_short!("ADMIN");
 
-pub const ULTRAHONK_CONTRACT_ADDRESS: &str = "CAXMCB6EYJ6Z6PHHC3MZ54IKHAZV5WSM2OAK4DSGM2E2M6DJG4FX5CPB";
+pub const ULTRAHONK_CONTRACT_ADDRESS: &str = "CCKXLUP4O42ZHHXQF5HBQR3IIQNKJEIZURL6FRKRZIZ7MTSLDJJZXBSM";
 
 
 #[contractimpl]

@@ -103,12 +103,35 @@ export class NoirService {
    * @returns Verification key as raw bytes
    */
   async loadVk(circuitName: string): Promise<Uint8Array> {
-    const vkResponse = await fetch(`/circuits/${circuitName}_vk.json`);
+    // Special case for zcore_zk which uses vk_fields.json
+    const vkFileName = circuitName === 'zcore_zk' ? 'vk_fields.json' : `${circuitName}_vk.json`;
+    const vkResponse = await fetch(`/circuits/${vkFileName}`);
     if (!vkResponse.ok) {
-      throw new Error(`Failed to load VK for circuit: ${circuitName}`);
+      throw new Error(`Failed to load VK for circuit: ${circuitName} (tried ${vkFileName})`);
     }
-    const vkArrayBuffer = await vkResponse.arrayBuffer();
-    return new Uint8Array(vkArrayBuffer);
+    
+    // vk_fields.json is a JSON array of hex strings, need to convert to bytes
+    if (circuitName === 'zcore_zk') {
+      const vkJson = await vkResponse.json();
+      // Convert array of hex strings to Uint8Array
+      const vkBytes = new Uint8Array(vkJson.length * 32); // Each field is 32 bytes
+      vkJson.forEach((hexStr: string, index: number) => {
+        // Remove '0x' prefix if present
+        const hex = hexStr.startsWith('0x') ? hexStr.slice(2) : hexStr;
+        // Parse hex string to bytes (big-endian)
+        for (let i = 0; i < 32; i++) {
+          const byteIndex = i * 2;
+          if (byteIndex + 1 < hex.length) {
+            vkBytes[index * 32 + (31 - i)] = parseInt(hex.slice(byteIndex, byteIndex + 2), 16);
+          }
+        }
+      });
+      return vkBytes;
+    } else {
+      // For other circuits, VK is stored as raw bytes
+      const vkArrayBuffer = await vkResponse.arrayBuffer();
+      return new Uint8Array(vkArrayBuffer);
+    }
   }
 
   /**
