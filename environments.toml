@@ -8,11 +8,8 @@ run-locally = true
 
 [development.contracts]
 
-[development.contracts.guess_the_puzzle]
+[development.contracts.ultrahonk_soroban_contract]
 client = true
-constructor_args = """
---admin default
-"""
 
 [development.contracts.zcore_scoring]
 client = true

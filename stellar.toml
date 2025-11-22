@@ -1,0 +1,7 @@
+[[contracts]]
+name = "ultrahonk_soroban_contract"
+path = "contracts/ultrahonk-soroban-contract"
+
+[[contracts]]
+name = "zcore_scoring"
+path = "contracts/zcore-scoring"

@@ -20,7 +20,7 @@ pub const VK_KEY: &Symbol = &symbol_short!("VK");
 pub const ADMIN_KEY: &Symbol = &symbol_short!("ADMIN");
 pub const MIN_REQUIREMENT_KEY: &Symbol = &symbol_short!("MIN_REQ");
 
-pub const ULTRAHONK_CONTRACT_ADDRESS: &str = "CCKXLUP4O42ZHHXQF5HBQR3IIQNKJEIZURL6FRKRZIZ7MTSLDJJZXBSM";
+pub const ULTRAHONK_CONTRACT_ADDRESS: &str = "GD4ELZEONXZANIWRJAED5JPBN7KJG6ZQ5AV46HRLZRTEFNKWJP3UFREL";
 
 #[contractimpl]
 impl ZcoreScoring {
