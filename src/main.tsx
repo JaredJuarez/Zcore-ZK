@@ -1,5 +1,5 @@
 // Ensure window is available for bb.js before any imports
-if (typeof window === 'undefined' && typeof globalThis !== 'undefined') {
+if (typeof window === "undefined" && typeof globalThis !== "undefined") {
   (globalThis as any).window = globalThis;
 }
 
@@ -36,5 +36,5 @@ createRoot(document.getElementById("root") as HTMLElement).render(
         </WalletProvider>
       </QueryClientProvider>
     </NotificationProvider>
-  </StrictMode>,
+  </StrictMode>
 );

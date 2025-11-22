@@ -1,2 +1,138 @@
 /* Import font for Stellar Design System */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Inconsolata:wght@500&display=swap");
+
+/* Variables CSS modernas para fondo blanco */
+:root {
+  --color-primary: #ffffff;
+  --color-secondary: #f8fafc;
+  --color-accent: #1f2937;
+  --color-text: #111827;
+  --color-text-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --font-system:
+    "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Reset y base styles modernos */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-system);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeSpeed;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-primary);
+  color: var(--color-text);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  min-height: 100vh;
+}
+
+/* Overrides for Stellar Design System con fondo blanco */
+.Layout {
+  background: transparent !important;
+}
+
+.Layout__header {
+  background: var(--color-primary) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  backdrop-filter: blur(20px);
+}
+
+.Layout__footer {
+  background: var(--color-secondary) !important;
+  border-top: 1px solid var(--color-border) !important;
+  margin-top: 0 !important;
+}
+
+/* Modern button styles para fondo blanco */
+.Button--primary {
+  background: var(--color-accent) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.Button--primary:hover {
+  background: #374151 !important;
+}
+
+.Button--secondary {
+  background: transparent !important;
+  color: var(--color-accent) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.Button--secondary:hover {
+  border-color: var(--color-accent) !important;
+  background: var(--color-secondary) !important;
+}
+
+.Button--tertiary {
+  background: transparent !important;
+  color: var(--color-text-muted) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.Button--tertiary:hover {
+  color: var(--color-accent) !important;
+  background: var(--color-secondary) !important;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Mejorar contraste en enlaces */
+a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-accent);
+}
+
+/* Tipografía moderna */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--color-accent);
+}
+
+p {
+  line-height: 1.7;
+  color: var(--color-text);
+}
+
+/* Focus styles modernos */
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

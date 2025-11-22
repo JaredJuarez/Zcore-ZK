@@ -1,4 +1,4 @@
-import { Button, Icon, Layout } from "@stellar/design-system";
+import { Button, Layout } from "@stellar/design-system";
 import ConnectAccount from "./components/ConnectAccount.tsx";
 import { Routes, Route, Outlet, NavLink } from "react-router-dom";
 import Home from "./pages/Home";
@@ -7,50 +7,74 @@ import Zcore from "./pages/Zcore";
 
 const AppLayout: React.FC = () => (
   <main>
-    <Layout.Header
-      projectId="Noir App"
-      projectTitle="Noir App"
-      contentRight={
-        <>
-          <nav style={{ display: "flex", gap: "0.5rem" }}>
-            <NavLink
-              to="/zcore"
-              style={{
-                textDecoration: "none",
-              }}
-            >
-              {({ isActive }) => (
-                <Button
-                  variant="tertiary"
-                  size="md"
-                  disabled={isActive}
-                >
-                  Zcore
-                </Button>
-              )}
-            </NavLink>
-            <NavLink
-              to="/debug"
-              style={{
-                textDecoration: "none",
-              }}
-            >
-              {({ isActive }) => (
-                <Button
-                  variant="tertiary"
-                  size="md"
-                  disabled={isActive}
-                >
-                  <Icon.Code02 size="md" />
-                  Debugger
-                </Button>
-              )}
-            </NavLink>
-          </nav>
-          <ConnectAccount />
-        </>
-      }
-    />
+    <header
+      style={{
+        position: "sticky",
+        top: 0,
+        width: "100%",
+        background: "white",
+        borderBottom: "1px solid #e5e7eb",
+        zIndex: 1000,
+        boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "1rem 2rem",
+          maxWidth: "1400px",
+          margin: "0 auto",
+        }}
+      >
+        <NavLink
+          to="/"
+          style={{
+            textDecoration: "none",
+            color: "#1f2937",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "2rem",
+              fontWeight: "700",
+              margin: 0,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            ZCore
+          </h1>
+        </NavLink>
+
+        <nav style={{ display: "flex", gap: "0.5rem" }}>
+          <NavLink
+            to="/zcore"
+            style={{
+              textDecoration: "none",
+            }}
+          >
+            {({ isActive }) => (
+              <Button variant="tertiary" size="md" disabled={isActive}>
+                Calcular Score
+              </Button>
+            )}
+          </NavLink>
+          <a
+            href="https://v0-zc-ore-landing-page.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              textDecoration: "none",
+            }}
+          >
+            <Button variant="tertiary" size="md">
+              Documentación API
+            </Button>
+          </a>
+        </nav>
+      </div>
+    </header>
     <Outlet />
     <Layout.Footer>
       <span>
