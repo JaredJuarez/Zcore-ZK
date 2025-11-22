@@ -1,11 +1,10 @@
 mod form;
-
 use form::Form;
 
-fn main(form: Form, requirement: u16) -> pub u16 {
+fn main(form: Form, requirement: pub u16) -> pub u16 {
     let points = form.get_points();
-
-    assert(points >= requirement, "no cumple los requisitos");
-
-    requirement
+    
+    assert(points >= requirement, "No cumple los requisitos");
+    
+    points
 }

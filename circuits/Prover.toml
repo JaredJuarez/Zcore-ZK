@@ -1,5 +1,38 @@
-requirement = 100
+requirement = 500
 
 [form]
-num_years = 1
-num_txs = 1200
+horizon_score = 1
+
+[form.form_data]
+# Datos sensibles hasheados (en producción usa un hash real)
+nombre_completo_hash = "0x1a2b3c4d5e6f7890abcdef1234567890"
+dni_hash = "0x12345678abcdef1234567890abcdef12"
+email_hash = "0xabcdef1234567890fedcba9876543210"
+
+# Verificación de identidad
+email_verificado = true
+telefono_verificado = true
+dni_verificado = true
+
+# Situación laboral
+tiene_empleo = true
+tipo_empleo = 4  # tiempo_completo_privado
+ingresos_mensuales_usd = 2500
+antiguedad_trabajo_meses = 36
+
+# Situación financiera tradicional
+tiene_cuenta_bancaria = true
+antiguedad_cuenta_bancaria_meses = 48
+tiene_tarjeta_credito = true
+usa_tarjeta_responsablemente = true
+tiene_cuenta_ahorro = true
+tuvo_prestamos = true
+cantidad_prestamos_pagados = 2
+prestamos_a_tiempo = true
+credito_actual_al_dia = true
+tiene_deudas = false
+ratio_deuda_ingreso = 0  # 0.0 * 100 = 0
+
+# País y completitud
+pais_tier = 2  # Argentina
+campos_vacios = 0
